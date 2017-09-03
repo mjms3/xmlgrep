@@ -2,28 +2,29 @@ package extractnodes
 
 import (
 	"encoding/xml"
-	"fmt"
+	"io"
 )
 
-func ExtractNodes(inputXmlString string) []string  {
-	type InnerXml struct {
-		Content string `xml:",innerxml"`
-	}
+type InnerXmlContent struct {
+	UnderlyingString string `xml:",innerxml"`
+}
 
-	type NodeList struct {
-		Tag    []InnerXml     `xml:"A"`
+func ExtractNodes(inputXml io.Reader, targetTag string) []string  {
+	var innerXml InnerXmlContent
+	decoder := xml.NewDecoder(inputXml)
+	nodesList := make([]string,0,0)
+	for {
+		token,_:= decoder.Token()
+		if token == nil {
+			break
+		}
+		switch Element := token.(type) {
+		case xml.StartElement:
+			if Element.Name.Local == targetTag {
+				decoder.DecodeElement(&innerXml, &Element)
+				nodesList = append(nodesList, innerXml.UnderlyingString)
+			}
+		}
 	}
-
-	result := NodeList{}
-	err := xml.Unmarshal([]byte(inputXmlString), &result)
-	if err != nil {
-		fmt.Printf("error: %s\n", err)
-	}
-
-	innerXmlList := make([]string,len(result.Tag))
-	for idx := range result.Tag {
-		innerXmlList[idx] = result.Tag[idx].Content
-	}
-
-	return innerXmlList
+	return nodesList
 }
