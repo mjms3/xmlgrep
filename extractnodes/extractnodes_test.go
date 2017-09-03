@@ -34,7 +34,7 @@ func TestWeWantThisNode(t *testing.T) {
 	node := "<B>Test1</B>"
 
 	testInputs := []FilteringParams{
-		{"", EMPTY_STRING},
+		{EMPTY_STRING, EMPTY_STRING},
 		{"B", "Test1"},
 		{"B", "Test*"},
 		{"B", EMPTY_STRING},
