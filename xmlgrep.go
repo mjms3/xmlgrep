@@ -6,6 +6,8 @@ import (
 	"github.com/mjms3/xmlgrep/extractnodes"
 	"io"
 	"os"
+	"github.com/renstrom/dedent"
+	"strings"
 )
 
 func getReader(args []string) io.Reader {
@@ -32,7 +34,10 @@ func main() {
 	filteringParams := extractnodes.FilteringParams{*subTagToLookFor, *filterToApply}
 	extractedNodes := extractnodes.ExtractNodes(reader, tagOfInterest, filteringParams)
 	for _, node := range extractedNodes {
-		fmt.Printf("%s\n", node)
+		trimmedNode := strings.TrimSpace(dedent.Dedent(node))
+		if len(trimmedNode)>0 {
+			fmt.Printf("%s\n", trimmedNode)
+		}
 	}
 
 }
