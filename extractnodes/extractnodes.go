@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+const EMPTY_STRING string = ""
+
 type InnerXmlContent struct {
 	UnderlyingString string `xml:",innerxml"`
 }
@@ -33,7 +35,7 @@ func ExtractNodes(inputXml io.Reader, targetTag string, params FilteringParams) 
 		case xml.StartElement:
 			if Element.Name.Local == targetTag {
 				decoder.DecodeElement(&innerXml, &Element)
-				if DoWeWantThisNode(innerXml.UnderlyingString, params.TagToLookFor,
+				if WeWantThisNode(innerXml.UnderlyingString, params.TagToLookFor,
 					params.FilterToApply) == true {
 					nodesList = append(nodesList, innerXml.UnderlyingString)
 				}
@@ -44,8 +46,8 @@ func ExtractNodes(inputXml io.Reader, targetTag string, params FilteringParams) 
 	return nodesList
 }
 
-func DoWeWantThisNode(node string, tagOfInterest string, requiredValue string) bool {
-	if tagOfInterest == "" {
+func WeWantThisNode(node string, tagOfInterest string, requiredValue string) bool {
+	if tagOfInterest == EMPTY_STRING {
 		return true
 	}
 	xmlAsReader := strings.NewReader(node)
@@ -62,11 +64,7 @@ func DoWeWantThisNode(node string, tagOfInterest string, requiredValue string) b
 		case xml.StartElement:
 			if Element.Name.Local == tagOfInterest {
 				decoder.DecodeElement(&contents, &Element)
-				if requiredValue == "" {
-					return true
-				}
-
-				if requiredValueRegex.MatchString(contents.Contents) {
+				if requiredValue == EMPTY_STRING || requiredValueRegex.MatchString(contents.Contents) {
 					return true
 				}
 			}
