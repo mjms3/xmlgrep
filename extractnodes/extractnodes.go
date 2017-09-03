@@ -15,7 +15,12 @@ type CharData struct {
 	Contents string `xml:",chardata"`
 }
 
-func ExtractNodes(inputXml io.Reader, targetTag string) []string {
+type FilteringParams struct {
+	TagToLookFor  string
+	FilterToApply string
+}
+
+func ExtractNodes(inputXml io.Reader, targetTag string, params FilteringParams) []string {
 	var innerXml InnerXmlContent
 	decoder := xml.NewDecoder(inputXml)
 	nodesList := make([]string, 0, 0)
@@ -28,7 +33,11 @@ func ExtractNodes(inputXml io.Reader, targetTag string) []string {
 		case xml.StartElement:
 			if Element.Name.Local == targetTag {
 				decoder.DecodeElement(&innerXml, &Element)
-				nodesList = append(nodesList, innerXml.UnderlyingString)
+				if DoWeWantThisNode(innerXml.UnderlyingString, params.TagToLookFor,
+					params.FilterToApply) == true {
+					nodesList = append(nodesList, innerXml.UnderlyingString)
+				}
+
 			}
 		}
 	}
@@ -36,6 +45,9 @@ func ExtractNodes(inputXml io.Reader, targetTag string) []string {
 }
 
 func DoWeWantThisNode(node string, tagOfInterest string, requiredValue string) bool {
+	if tagOfInterest == "" {
+		return true
+	}
 	xmlAsReader := strings.NewReader(node)
 	decoder := xml.NewDecoder(xmlAsReader)
 	requiredValueRegex := regexp.MustCompile(requiredValue)
@@ -45,10 +57,15 @@ func DoWeWantThisNode(node string, tagOfInterest string, requiredValue string) b
 		if token == nil {
 			break
 		}
+
 		switch Element := token.(type) {
 		case xml.StartElement:
 			if Element.Name.Local == tagOfInterest {
 				decoder.DecodeElement(&contents, &Element)
+				if requiredValue == "" {
+					return true
+				}
+
 				if requiredValueRegex.MatchString(contents.Contents) {
 					return true
 				}
