@@ -30,7 +30,7 @@ func TestExtractNodes_withFilter(t *testing.T) {
 
 }
 
-func TestWeWantThisNode_withNoTag_returnsTrue(t *testing.T) {
+func TestWeWantThisNode(t *testing.T) {
 	node := "<B>Test1</B>"
 
 	testInputs := []FilteringParams{
