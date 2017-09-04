@@ -1,0 +1,10 @@
+language: go
+
+go:
+- master
+
+
+install:
+- go get github.com/renstrom/dedent
+
+script: go test -v ./...
