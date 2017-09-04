@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/mjms3/xmlgrep/extractnodes"
-	"github.com/renstrom/dedent"
 	"io"
 	"os"
 	"strings"
@@ -36,7 +35,7 @@ func main() {
 		*retainTags}
 	extractedNodes := extractnodes.ExtractNodes(reader, tagOfInterest, filteringParams)
 	for _, node := range extractedNodes {
-		trimmedNode := strings.TrimSpace(dedent.Dedent(node))
+		trimmedNode := strings.TrimSpace(node)
 		if len(trimmedNode) > 0 {
 			fmt.Printf("%s\n", trimmedNode)
 		}

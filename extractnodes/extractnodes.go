@@ -7,6 +7,7 @@ import (
 	"io"
 	"regexp"
 	"strings"
+	"github.com/renstrom/dedent"
 )
 
 const EMPTY_STRING string = ""
@@ -46,7 +47,7 @@ func ExtractNodes(inputXml io.Reader, targetTag string, params ProgramOptions) [
 					if params.RetainTags {
 						e.EncodeToken(currentElement)
 					}
-					writer.Write([]byte(innerXml.UnderlyingString))
+					writer.Write([]byte(dedent.Dedent(innerXml.UnderlyingString)))
 					if params.RetainTags {
 						e.EncodeToken(xml.EndElement{currentElement.Name})
 					}
