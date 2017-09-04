@@ -17,6 +17,9 @@ func getReader(args []string) io.Reader {
 			fmt.Errorf("Error opening: %s\n%s", fileName, err)
 		}
 		return reader
+	} else if len(args) > 2 {
+		fmt.Printf("Reading from multiple files not yet implemented.\n")
+		os.Exit(1)
 	}
 	return os.Stdin
 }
