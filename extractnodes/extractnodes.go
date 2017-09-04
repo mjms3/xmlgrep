@@ -1,6 +1,8 @@
 package extractnodes
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/xml"
 	"io"
 	"regexp"
@@ -17,12 +19,13 @@ type CharData struct {
 	Contents string `xml:",chardata"`
 }
 
-type FilteringParams struct {
+type ProgramOptions struct {
 	TagToLookFor  string
 	FilterToApply string
+	RetainTags    bool
 }
 
-func ExtractNodes(inputXml io.Reader, targetTag string, params FilteringParams) []string {
+func ExtractNodes(inputXml io.Reader, targetTag string, params ProgramOptions) []string {
 	var innerXml InnerXmlContent
 	decoder := xml.NewDecoder(inputXml)
 	nodesList := make([]string, 0, 0)
@@ -31,13 +34,25 @@ func ExtractNodes(inputXml io.Reader, targetTag string, params FilteringParams) 
 		if token == nil {
 			break
 		}
-		switch Element := token.(type) {
+		switch currentElement := token.(type) {
 		case xml.StartElement:
-			if Element.Name.Local == targetTag {
-				decoder.DecodeElement(&innerXml, &Element)
+			if currentElement.Name.Local == targetTag {
+				decoder.DecodeElement(&innerXml, &currentElement)
 				if WeWantThisNode(innerXml.UnderlyingString, params.TagToLookFor,
 					params.FilterToApply) == true {
-					nodesList = append(nodesList, innerXml.UnderlyingString)
+					var buffer bytes.Buffer
+					writer := bufio.NewWriter(&buffer)
+					e := xml.NewEncoder(writer)
+					if params.RetainTags {
+						e.EncodeToken(currentElement)
+					}
+					writer.Write([]byte(innerXml.UnderlyingString))
+					if params.RetainTags {
+						e.EncodeToken(xml.EndElement{currentElement.Name})
+					}
+					e.Flush()
+					writer.Flush()
+					nodesList = append(nodesList, buffer.String())
 				}
 
 			}
