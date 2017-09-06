@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/xml"
+	"github.com/renstrom/dedent"
 	"io"
 	"regexp"
 	"strings"
-	"github.com/renstrom/dedent"
 )
 
-const EMPTY_STRING string = ""
+const EMPTY_STRING string = ``
 
 type InnerXmlContent struct {
 	UnderlyingString string `xml:",innerxml"`
