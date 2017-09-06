@@ -28,6 +28,7 @@ func main() {
 	subTagToLookFor := flag.String("t", extractnodes.EMPTY_STRING, "Sub tag to filter on.")
 	filterToApply := flag.String("f", extractnodes.EMPTY_STRING, "Text filter for Sub tag")
 	retainTags := flag.Bool("r", false, "Retain enclosing tags")
+	nameSpace := flag.String("n", extractnodes.EMPTY_STRING, "Restrict search to elements in this namespace")
 
 	flag.Parse()
 
@@ -35,7 +36,7 @@ func main() {
 	tagOfInterest := positionalArgs[0]
 	reader := getReader(positionalArgs)
 	filteringParams := extractnodes.ProgramOptions{*subTagToLookFor, *filterToApply,
-		*retainTags}
+		*retainTags, *nameSpace}
 	extractedNodes := extractnodes.ExtractNodes(reader, tagOfInterest, filteringParams)
 	for _, node := range extractedNodes {
 		trimmedNode := strings.TrimSpace(node)
