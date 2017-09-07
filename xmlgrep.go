@@ -9,19 +9,21 @@ import (
 	"strings"
 )
 
-func getReader(args []string) io.Reader {
-	if len(args) == 2 {
-		fileName := args[1]
-		reader, err := os.Open(fileName)
-		if err != nil {
-			fmt.Errorf("Error opening: %s\n%s", fileName, err)
+func getReaders(args []string) []io.Reader {
+
+	if len(args) >= 2 {
+		var readers []io.Reader
+		for _, fileName := range args[1:] {
+			reader, err := os.Open(fileName)
+			if err != nil {
+				fmt.Errorf("Error opening: %s\n%s", fileName, err)
+			}
+			readers = append(readers, reader)
 		}
-		return reader
-	} else if len(args) > 2 {
-		fmt.Printf("Reading from multiple files not yet implemented.\n")
-		os.Exit(1)
+		return readers
 	}
-	return os.Stdin
+
+	return []io.Reader{os.Stdin}
 }
 
 func main() {
@@ -34,15 +36,17 @@ func main() {
 
 	positionalArgs := flag.Args()
 	tagOfInterest := positionalArgs[0]
-	reader := getReader(positionalArgs)
+
 	filteringParams := extractnodes.ProgramOptions{*subTagToLookFor, *filterToApply,
 		*retainTags, *nameSpace}
-	extractedNodes := extractnodes.ExtractNodes(reader, tagOfInterest, filteringParams)
-	for _, node := range extractedNodes {
-		trimmedNode := strings.TrimSpace(node)
-		if len(trimmedNode) > 0 {
-			fmt.Printf("%s\n", trimmedNode)
+	readers := getReaders(positionalArgs)
+	for _, reader := range readers {
+		extractedNodes := extractnodes.ExtractNodes(reader, tagOfInterest, filteringParams)
+		for _, node := range extractedNodes {
+			trimmedNode := strings.TrimSpace(node)
+			if len(trimmedNode) > 0 {
+				fmt.Printf("%s\n", trimmedNode)
+			}
 		}
 	}
-
 }
