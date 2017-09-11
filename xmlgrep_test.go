@@ -67,6 +67,4 @@ func TestXmlGrep(t *testing.T) {
 		}
 	}
 
-	os.Args = []string{"DummyFileName", "A", "file1"}
-
 }
