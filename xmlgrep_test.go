@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"io"
 	"os"
 	"strings"
@@ -18,18 +19,54 @@ func (fs testFs) Open(name string) (io.Reader, error) {
 }
 
 func TestXmlGrep(t *testing.T) {
-	fs := &testFs{
-		fileContents: make(map[string]string),
+	type testXmlGrepTestCase struct {
+		fileContents   map[string]string
+		args           []string
+		expectedOutput string
+		osStdin        string
 	}
 
-	fs.fileContents["file1"] = "<A>test1</A>"
-	os.Args = []string{"DummyFileName", "A", "file1"}
-	outputBuffer := new(bytes.Buffer)
-	run(fs, outputBuffer)
-	outputString := outputBuffer.String()
-	expectedString := "test1\n"
-	if outputString != expectedString {
-		t.Errorf("Integration test with file contents: %s, args: %s, returned: %s, expected: %s",
-			fs.fileContents, os.Args, outputString, expectedString)
+	testCases := []testXmlGrepTestCase{
+		{
+			fileContents:   map[string]string{"file1": "<A>test1</A>"},
+			args:           []string{"A", "file1"},
+			osStdin:        "",
+			expectedOutput: "test1\n",
+		},
+		{
+			fileContents:   map[string]string{"file1": "<A>test1</A>"},
+			args:           []string{"-r", "A", "file1"},
+			osStdin:        "",
+			expectedOutput: "<A>test1</A>\n",
+		},
+		{
+			fileContents: map[string]string{
+				"file1": "<A>test1</A>",
+				"file2": "<A>test2</A>",
+			},
+			args:           []string{"-r", "A", "file1", "file2"},
+			osStdin:        "",
+			expectedOutput: "<A>test1</A>\n<A>test2</A>\n",
+		},
 	}
+
+	for _, testCase := range testCases {
+		fs := &testFs{
+			fileContents: testCase.fileContents,
+		}
+		os.Args = append([]string{"DummyFileName"}, testCase.args...)
+		flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.PanicOnError)
+		inputBuffer := strings.NewReader(testCase.osStdin)
+
+		outputBuffer := new(bytes.Buffer)
+		run(fs, outputBuffer, inputBuffer)
+		outputString := outputBuffer.String()
+		if outputString != testCase.expectedOutput {
+			t.Errorf("Integration test with file contents: %s, args: %s, stdin: %s, returned: %s, expected: %s",
+				fs.fileContents, os.Args, testCase.osStdin, outputString, testCase.expectedOutput)
+		}
+	}
+
+	os.Args = []string{"DummyFileName", "A", "file1"}
+
 }
